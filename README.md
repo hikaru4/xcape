@@ -33,7 +33,7 @@ event. Default is 500 ms.
 
 ### `-e <map-expression>`
 
-The expression has the grammar `'ModKey=Key[|OtherKey][;NextExpression]'`
+The expression has the grammar `'ModKey[*2]=Key[|OtherKey][;NextExpression]'`
 
 The list of key names is found in the header file `X11/keysymdef.h` (remove
 the `XK_` prefix). Note that due to limitations of X11 shifted keys *must*
@@ -45,6 +45,10 @@ have a key with "{" above "[").
 You can also specify ModKey in decimal (prefix `#`), octal (`#0`), or
 hexadecimal (`#0x`). It will be interpreted as a keycode unless no corresponding
 key name is found.
+
+The tag "\*2" means a double tap. Which provide a mapping from double tapping a
+key to another key. For example: "Shift_L*2=Caps_Lock" map double tapping shift
+to CapsLock. 
 
 #### Examples
 
