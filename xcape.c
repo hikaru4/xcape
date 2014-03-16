@@ -51,7 +51,9 @@ typedef struct _KeyMap_t
     Bool used;
     Bool pressed;
     Bool mouse;
+    Bool double_tap;
     struct timeval down_at;
+    struct timeval last_up_at;
     struct _KeyMap_t *next;
 } KeyMap_t;
 
@@ -283,8 +285,16 @@ void handle_key (XCape_t *self, KeyMap_t *key,
             struct timeval timev = self->timeout;
             if (self->timeout_valid)
             {
-                gettimeofday (&timev, NULL);
-                timersub (&timev, &key->down_at, &timev);
+                if (key->double_tap)
+                {
+                    gettimeofday (&timev, NULL);
+                    timersub (&timev, &key->last_up_at, &timev);
+                }
+                else
+                {
+                    gettimeofday (&timev, NULL);
+                    timersub (&timev, &key->down_at, &timev);
+                }
             }
 
             if (!self->timeout_valid || timercmp (&timev, &self->timeout, <))
@@ -306,6 +316,11 @@ void handle_key (XCape_t *self, KeyMap_t *key,
                     self->generated = key_add_key (self->generated, k->key);
                 }
                 XFlush (self->ctrl_conn);
+            }
+
+            if (key->double_tap)
+            {
+                gettimeofday (&key->last_up_at, NULL);
             }
         }
         key->used = False;
@@ -394,6 +409,15 @@ KeyMap_t *parse_token (Display *dpy, char *token, Bool debug)
     if (to != NULL)
     {
         km = calloc (1, sizeof (KeyMap_t));
+        if (strstr(from, "*2"))
+        {
+            from = strsep(&from, "*2");
+            km->double_tap = True;
+        }
+        else
+        {
+            km->double_tap = False;
+        }
 
         if (!strncmp (from, "#", 1)
                && strsep (&from, "#") != NULL)
